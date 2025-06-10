@@ -7,8 +7,13 @@ M.opts = {
   enabled = true,
   patterns = { { file = "*.env*", shroud = "=.*" } },
   character = "*",
-  offset = 1,             -- Set to 1 to include the prefix character in the shrouded text
-  _visible_lin_num = nil, -- This is used to track the visible line number for unshrouding
+  offset = 1,            -- Set to 1 to include the prefix character in the shrouded text
+  on_shroud = function() -- Disable completion when shrouding
+    require('cmp').setup.buffer({ enabled = false })
+  end,
+  on_unshroud = function() -- Enable completion when unshrouding
+    require('cmp').setup.buffer({ enabled = true })
+  end,
 }
 
 M.setup = function(opts)
@@ -46,9 +51,13 @@ M.shroud = function(pattern)
   -- Resets the line shrouding to prevent ghosting issues
   M.unshroud()
 
+  if M.opts.on_shroud then
+    M.opts.on_shroud()
+  end
+
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
   for i, line in ipairs(lines) do
-    if i ~= M.opts._visible_lin_num then
+    if i ~= vim.b.visible_line_num then
       local function shroud_line(length, prefix)
         local shroud_str = prefix .. M.opts.character:rep(length)
         local remaining_length = length - vim.fn.strchars(shroud_str)
@@ -98,6 +107,10 @@ end
 
 M.unshroud = function()
   vim.api.nvim_buf_clear_namespace(0, namespace, 0, -1)
+
+  if M.opts.on_unshroud then
+    M.opts.on_unshroud()
+  end
 end
 
 M.unshroud_line = function(line)
@@ -106,8 +119,6 @@ M.unshroud_line = function(line)
   end
 
   vim.api.nvim_buf_clear_namespace(0, namespace, line - 1, line)
-
-  -- Add listener to track any movement in the buffer, and remove the unshroud from this line
 end
 
 M.enable = function()
@@ -122,8 +133,7 @@ M.enable = function()
     M.shroud(pattern)
   end
 
-  -- Set the visible line number to nil to indicate no line is currently unshrouded
-  M.opts._visible_lin_num = nil
+  vim.b.visible_line_num = nil
 end
 
 M.disable = function()
@@ -147,13 +157,13 @@ end
 M.peek = function()
   local buf = vim.api.nvim_win_get_buf(0)
   local line_number = vim.api.nvim_win_get_cursor(0)[1]
-  M.opts._visible_lin_num = line_number
+  vim.b.visible_line_num = line_number
 
   vim.api.nvim_create_autocmd(
     { "CursorMoved", "CursorMovedI", "BufLeave" }, {
       buffer = buf,
       callback = function()
-        M.opts._visible_lin_num = nil
+        vim.b.visible_line_num = nil
         M.reshroud()
 
         return true

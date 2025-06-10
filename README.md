@@ -6,7 +6,7 @@
 
 ## Features
 
-- Patten-based text hiding using Lua patterns.
+- Patten-based text hiding using Lua [patterns](https://www.lua.org/manual/5.1/manual.html#5.4.1).
 - Configurable overlay characters applied non-destructively.
 - Customisable offset handling for different matching patterns.
 - Peek functionality to temporarily reveal hidden text.
@@ -21,10 +21,18 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 {
   "chriso345/shroud.nvim",
   opts = {
-    enabled = true,         -- Enable shrouding by default
-    patterns = { { file = "*.env*", shroud = "=.*" } },
-    character = "*",        -- Character used to shroud text
-    offset = 1,             -- Set to 1 to include the prefix character in the shrouded text
+    enabled = true,          -- Enable shrouding by default
+    patterns = {
+      { file = "*.env*", shroud = "=.*" } -- Shroud everything after '=' in .env files
+    },
+    character = "*",         -- Character used to shroud text
+    offset = 1,              -- Set to 1 to include the prefix character in the shrouded text
+    on_shroud = function()   -- Runs on shrouding text, useful for disabling completion
+      require('cmp').setup.buffer({ enabled = false })
+    end,
+    on_unshroud = function() -- Runs on unshrouding text, usefule for re-enabling completion
+      require('cmp').setup.buffer({ enabled = true })
+    end,
   }
 }
 ```
@@ -40,7 +48,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 | `:ShroudEnable`  | Enables shrouding based on your settings                 |
 | `:ShroudDisable` | Disables all shrouds                                     |
 | `:ShroudToggle`  | Toggles shrouding on/off                                 |
-| `:ShroudPeek`    | Temporarily reveals hidden text (e.g. via a peek action) |
+| `:ShroudPeek`    | Temporarily reveals hidden text                          |
 
 These are ideal for use in keymaps or command-line workflows.
 
