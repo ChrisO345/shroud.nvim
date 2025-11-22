@@ -33,6 +33,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
     on_unshroud = function() -- Runs on unshrouding text, usefule for re-enabling completion
       require('cmp').setup.buffer({ enabled = true })
     end,
+    snacks = true,          -- Enable snacks integration
   }
 }
 ```
