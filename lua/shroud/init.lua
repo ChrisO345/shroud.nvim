@@ -195,7 +195,6 @@ end
 
 M.enable_snacks = function(pattern)
   local title_filter = pattern.file or nil
-  print("Title filter:", title_filter)
   if not title_filter then
     return
   end
